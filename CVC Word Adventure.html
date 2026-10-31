@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CVC Word Adventure</title>
+<style>
+:root{--bg:#fff7e6;--card:#ffffff;--ink:#2d2a4a;--soft:#8b86b0;--ok:#2bbd7e;--bad:#ff5a5f;--line:#ffe0a3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1b33;--card:#2b2850;--ink:#fff;--soft:#b4afe0;--line:#4a4682}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:520px;padding:14px;flex:1;display:flex;flex-direction:column}
+h1{font-size:26px;margin:6px 0 2px;text-align:center}
+.sub{text-align:center;color:var(--soft);margin:0 0 12px;font-size:15px}
+.mascot{display:flex;align-items:center;gap:10px;margin:6px 0 12px}
+.mascot .o{font-size:54px;animation:bob 2s ease-in-out infinite}
+.bubble{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:8px 14px;font-size:17px;flex:1}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lv{border:0;border-radius:22px;padding:18px 8px;color:#fff;font:inherit;font-size:20px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.18);text-align:center}
+.lv b{display:block;font-size:46px;line-height:1}
+.lv:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.back{border:0;background:var(--card);border-radius:14px;padding:8px 14px;font:inherit;font-size:18px;color:var(--ink);cursor:pointer;border:3px solid var(--line)}
+.stars{font-size:20px;letter-spacing:2px}
+.bar{height:12px;background:var(--line);border-radius:8px;overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s}
+.stage{background:var(--card);border:3px solid var(--line);border-radius:26px;padding:16px;text-align:center}
+.pic{font-size:96px;line-height:1.1}
+.row{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.t{width:78px;height:92px;border-radius:18px;background:#e9e6ff;color:#2d2a4a;font-size:54px;font-weight:800;display:flex;align-items:center;justify-content:center;border:0;font-family:inherit;box-shadow:0 5px 0 rgba(0,0,0,.15);cursor:pointer;transition:transform .15s}
+.t.v{color:#e0293a}
+.t.on{background:#ffd23f;transform:scale(1.18)}
+.slot{width:78px;height:92px;border-radius:18px;border:4px dashed var(--soft);font-size:54px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.slot.f{border:4px solid var(--ok);background:#d9f8e8;color:#2d2a4a}
+.say{border:0;background:#4c8dff;color:#fff;border-radius:50%;width:64px;height:64px;font-size:30px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.opt{border:4px solid var(--line);background:var(--bg);border-radius:20px;font-size:58px;padding:10px 0;cursor:pointer}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.good{background:#d9f8e8!important;border-color:var(--ok)!important}
+.hint{color:var(--soft);font-size:15px;margin:2px 0}
+.big{font-size:70px}
+.btn{border:0;border-radius:18px;background:var(--ok);color:#fff;font:inherit;font-size:20px;padding:12px 22px;margin:6px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.credit{text-align:center;color:var(--soft);font-size:13px;padding:10px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="home">
+  <h1>🔤 CVC Word Adventure</h1>
+  <p class="sub">مغامرة قراءة الكلمات الثلاثية — اختر أي مستوى</p>
+  <div class="mascot"><div class="o">🦉</div><div class="bubble">Hi! Pick a level and let’s read! 📖</div></div>
+  <div class="grid" id="lvls"></div>
+</div>
+
+<div id="game" class="hide">
+  <div class="top"><button class="back" onclick="home()">⬅ Back</button><div class="stars" id="st"></div></div>
+  <div class="bar"><i id="pb"></i></div>
+  <div class="mascot"><div class="o">🦉</div><div class="bubble" id="msg"></div></div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<div id="end" class="hide stage" style="margin-top:30px">
+  <div class="big">🏆</div>
+  <h1>Well done!</h1>
+  <div class="stars" id="fin" style="font-size:34px"></div>
+  <p class="sub">أحسنت! You read all the words!</p>
+  <button class="btn" onclick="start(cur)">🔁 Again</button>
+  <button class="btn" style="background:#4c8dff" onclick="home()">🏠 Levels</button>
+</div>
+
+<div class="credit">Created by T.Badria Alfalahi</div>
+</div>
+
+<script>
+const LV=[
+{t:'a',c:'#ff7a59',w:[['cat','🐱'],['hat','🎩'],['bat','🦇'],['pan','🍳'],['map','🗺️'],['bag','👜'],['nap','😴']]},
+{t:'e',c:'#2bbd7e',w:[['pen','🖊️'],['bed','🛏️'],['net','🥅'],['hen','🐔'],['leg','🦵'],['web','🕸️']]},
+{t:'i',c:'#4c8dff',w:[['pig','🐷'],['lip','👄'],['pin','📌'],['kid','🧒'],['six','6️⃣'],['bin','🗑️']]},
+{t:'o',c:'#b266ff',w:[['dog','🐶'],['pot','🍲'],['mop','🧹'],['fox','🦊'],['box','📦'],['log','🪵']]},
+{t:'u',c:'#ff5fa2',w:[['sun','☀️'],['bus','🚌'],['cup','🥤'],['bug','🐛'],['nut','🥜'],['jug','🫗']]},
+{t:'★',c:'#f5a300',w:[['car','🚗'],['pan','🍳'],['nap','😴'],['jar','🫙'],['dog','🐶'],['sun','☀️'],['pig','🐷'],['bed','🛏️']]}
+];
+const SND={a:'ah',e:'eh',i:'ih',o:'aw',u:'uh',b:'buh',c:'kuh',d:'duh',f:'fff',g:'guh',h:'hh',j:'juh',k:'kuh',l:'lll',m:'mmm',n:'nnn',p:'puh',r:'rrr',s:'sss',t:'tuh',w:'wuh',x:'ks',z:'zzz',y:'yuh'};
+const V='aeiou';
+let cur=0,rounds=[],idx=0,stars=0,busy=false;
+const $=id=>document.getElementById(id);
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function speak(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r||.8;speechSynthesis.speak(u)}catch(e){}}
+function beep(ok){try{const c=new (window.AudioContext||window.webkitAudioContext)();const n=ok?[660,880,1100]:[200];n.forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.value=.12;o.start(c.currentTime+i*.12);o.stop(c.currentTime+i*.12+.14)})}catch(e){}}
+
+$('lvls').innerHTML=LV.map((l,i)=>`<button class="lv" style="background:${l.c}" onclick="start(${i})"><b>${l.t}</b>${l.t==='★'?'Mix':'Short '+l.t}</button>`).join('');
+
+function home(){speechSynthesis&&speechSynthesis.cancel();['game','end'].forEach(x=>$(x).classList.add('hide'));$('home').classList.remove('hide')}
+function start(i){cur=i;rounds=sh(LV[i].w).slice(0,6);idx=0;stars=0;['home','end'].forEach(x=>$(x).classList.add('hide'));$('game').classList.remove('hide');next()}
+function upd(){$('st').textContent='⭐'.repeat(stars)||'☆';$('pb').style.width=(idx/rounds.length*100)+'%'}
+function say(m){$('msg').textContent=m}
+
+function next(){
+  busy=false;upd();
+  if(idx>=rounds.length){$('game').classList.add('hide');$('end').classList.remove('hide');$('fin').textContent='⭐'.repeat(stars);beep(1);speak('Great job!');return}
+  const [w,e]=rounds[idx];
+  idx%2===0?readRound(w,e):buildRound(w,e);
+}
+
+function tiles(w){return [...w].map(c=>`<button class="t ${V.includes(c)?'v':''}" onclick="tap(this,'${c}')">${c}</button>`).join('')}
+function tap(b,c){speak(SND[c]||c,.7);b.classList.add('on');setTimeout(()=>b.classList.remove('on'),500)}
+function blend(w){
+  const ts=document.querySelectorAll('#stage .row .t');
+  [...w].forEach((c,i)=>setTimeout(()=>{speak(SND[c],.7);ts.forEach(t=>t.classList.remove('on'));ts[i]&&ts[i].classList.add('on')},i*750));
+  setTimeout(()=>{ts.forEach(t=>t.classList.remove('on'));speak(w,.7)},w.length*750+100);
+}
+
+function readRound(w,e){
+  say('Read the word, then find the picture! اقرأ الكلمة واختر الصورة');
+  const others=sh([].concat(...LV.map(l=>l.w)).filter(x=>x[0]!==w)).filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i&&x[1]!==e).slice(0,2);
+  const opts=sh([[w,e],...others]);
+  $('stage').innerHTML=`<div class="hint">👆 Tap letters · اضغط الحروف</div><div class="row">${tiles(w)}</div>
+  <button class="say" onclick="blend('${w}')">🔊</button>
+  <div class="opts">${opts.map(o=>`<button class="opt" onclick="pick(this,'${o[0]}','${w}')">${o[1]}</button>`).join('')}</div>`;
+  setTimeout(()=>blend(w),400);
+}
+function pick(b,x,w){
+  if(busy)return;
+  if(x===w){busy=true;b.classList.add('good');win(w)}
+  else{b.classList.add('shake');beep(0);say('Try again! حاول مرة أخرى 💪');setTimeout(()=>b.classList.remove('shake'),400)}
+}
+
+let need,pos;
+function buildRound(w,e){
+  say('Build the word! كوّن الكلمة'); need=w;pos=0;
+  $('stage').innerHTML=`<div class="pic">${e}</div><button class="say" onclick="speak('${w}',.7)">🔊</button>
+  <div class="row" id="sl">${[...w].map(()=>'<div class="slot"></div>').join('')}</div>
+  <div class="row" id="bk">${sh([...w]).map(c=>`<button class="t ${V.includes(c)?'v':''}" onclick="place(this,'${c}')">${c}</button>`).join('')}</div>`;
+  setTimeout(()=>speak(w,.7),400);
+}
+function place(b,c){
+  if(busy||b.style.visibility==='hidden')return;
+  if(c===need[pos]){
+    const s=document.querySelectorAll('#sl .slot')[pos];s.textContent=c;s.classList.add('f');
+    b.style.visibility='hidden';speak(SND[c],.7);pos++;
+    if(pos===need.length){busy=true;setTimeout(()=>win(need),500)}
+  }else{b.classList.add('shake');beep(0);say('Almost! Listen again 👂');setTimeout(()=>b.classList.remove('shake'),400)}
+}
+
+function win(w){
+  stars++;idx++;upd();beep(1);say('🎉 Great! '+w.toUpperCase());
+  setTimeout(()=>speak(w,.7),350);
+  setTimeout(next,1900);
+}
+</script>
+</body>
+</html>
